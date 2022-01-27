@@ -1,0 +1,85 @@
+import sqlalchemy
+import pandas as pd
+from sqlalchemy import create_engine
+from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+from sqlalchemy import inspect
+
+#Conectar el motor al archivo de la base de datos a usar
+engine = create_engine('sqlite:///chinook.db')
+engine
+
+#Extract  
+metadata = MetaData()
+metadata.create_all(engine)
+inspector = inspect(engine)
+inspector.get_columns('customer')
+
+#Proporcione una consulta que muestre el agente de ventas obtuvo la menor cantidad de ventas en 2010
+with engine.connect() as con:
+    
+    rs = con.execute("""SELECT e.FirstName || " " || e.LastName as "Sales Rep", SUM(i.Total) as "Total Sales" 
+FROM employees e, customers c, invoices i 
+Where e.EmployeeId == c.SupportRepId 
+AND c.CustomerId == i.CustomerId 
+AND i.InvoiceDate LIKE "2010%" 
+Group BY e.FirstName || " " || e.LastName 
+ORDER BY SUM(i.Total) ASC 
+LIMIT 1;""")
+    
+    for row in rs:
+        print(row) 
+# Load
+df = pd.read_sql_query("""SELECT e.FirstName || " " || e.LastName as "Sales Rep", SUM(i.Total) as "Total Sales" 
+FROM employees e, customers c, invoices i 
+Where e.EmployeeId == c.SupportRepId 
+AND c.CustomerId == i.CustomerId 
+AND i.InvoiceDate LIKE "2010%" 
+Group BY e.FirstName || " " || e.LastName 
+ORDER BY SUM(i.Total) ASC 
+LIMIT 1;""", con=engine.connect())
+df.to_csv('dataframe_C1.csv')
+
+#Proporcione una consulta que cuente el número de elementos por Pais
+with engine.connect() as con:
+    
+    rs = con.execute("""SELECT COUNT(il.InvoiceLineId) as "Elementos", i.BillingCountry
+FROM invoice_items il
+inner join invoices i on il.InvoiceId = i.InvoiceId 
+GROUP BY i.BillingCountry""")
+    
+    for row in rs:
+        print(row)
+        
+con.close()
+
+# Load
+df = pd.read_sql_query("""SELECT COUNT(il.InvoiceLineId) as "Elementos", i.BillingCountry
+FROM invoice_items il
+inner join invoices i on il.InvoiceId = i.InvoiceId 
+GROUP BY i.BillingCountry""", con=engine.connect())
+df.to_csv('dataframe_C2.csv')
+
+#Proporcione una consulta que muestre la factura mas alta, el nombre del cliente y el nombre del agente de ventas para todas las facturas que sean de USA.
+
+with engine.connect() as con:
+    
+    rs = con.execute("""select max(i.Total), c.FirstName || " " || c.LastName
+as "Customer", c.Country, e.FirstName || " " || e.LastName as "Sales Agent Name" 
+from invoices i, employees e, customers c 
+where i.CustomerId == c.SupportRepId 
+and c.SupportRepId == e.EmployeeId
+and c.Country = "USA";""")
+    
+    for row in rs:
+        print(row)
+        
+con.close()
+
+# Load
+df = pd.read_sql_query("""select max(i.Total), c.FirstName || " " || c.LastName
+as "Customer", c.Country, e.FirstName || " " || e.LastName as "Sales Agent Name" 
+from invoices i, employees e, customers c 
+where i.CustomerId == c.SupportRepId 
+and c.SupportRepId == e.EmployeeId
+and c.Country = "USA";""", con=engine.connect())
+df.to_csv('dataframe_C3.csv')
