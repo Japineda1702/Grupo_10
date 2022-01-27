@@ -1,0 +1,113 @@
+--Proporcione una consulta que muestre la cantidad de Pistas que hay en cada play list y toda su informacion principal
+select p.PlaylistId,p.Name Nombre,count(p.PlaylistId) "Cantidad Playlist",t.Name Nombre,a.Title Titulo,ar.Name,g.Name,mt.Name
+from tracks t
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join genres g on g.GenreId = t.GenreId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+group by p.PlaylistId;
+
+--Proporcione una consulta que muestre la pistas de la play list "Music Videos" y toda su informacion principal
+select p.PlaylistId,p.Name, t.Name,a.Title,ar.Name,g.Name,mt.Name
+from tracks t
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join genres g on g.GenreId = t.GenreId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+where p.Name = "Music Videos";
+
+--Proporcione una consulta que muestre las ventas totales por compositor menor a 2 
+select t.Composer,sum(t.UnitPrice) Ventas
+from tracks t
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join genres g on g.GenreId = t.GenreId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId 
+group by Composer 
+having Ventas < 2;
+
+--Proporcione una consulta que mueste a un residente de USA que compro la pista "Your Time Has Come"
+select c.FirstName,c.LastName,c.Country,t.Name,p.PlaylistId,p.Name Tipo
+from customers c
+inner join invoices i on i.CustomerId = c.CustomerId
+inner join invoice_items it on it.InvoiceId = i.InvoiceId
+inner join tracks t on t.TrackId = it.TrackId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+where i.BillingCountry = "USA" and t.Name = "Your Time Has Come";
+
+--Proporcione una consulta que muestre lo cantidad de titulos que a vendido cada empleado
+select e.LastName Apellido , e.FirstName Nombre, count(a.Title) Cantidad
+from employees e
+inner join customers c on c.SupportRepId = e.EmployeeId
+inner join invoices i on i.CustomerId = c.CustomerId
+inner join invoice_items it on it.InvoiceId = i.InvoiceId
+inner join tracks t on t.TrackId = it.TrackId
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+group by EmployeeId;
+
+--cantidad de playlist que vendio cada empleado
+select e.LastName,e.FirstName,count(p.PlaylistId) Cantidad
+from employees e
+inner join customers c on c.SupportRepId = e.EmployeeId
+inner join invoices i on i.CustomerId = c.CustomerId
+inner join invoice_items it on it.InvoiceId = i.InvoiceId
+inner join tracks t on t.TrackId = it.TrackId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId 
+group by e.EmployeeId;
+ 
+--muestre los 3 generos con mas milisegundos vendidos y la cantidad de veces que se vendio
+select g.Name,sum(t.Milliseconds) Milisegundos, count(it.invoiceId) Cantidad
+from tracks t
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join genres g on g.GenreId = t.GenreId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+inner join invoice_items it on it.TrackId = t.TrackId
+group by g.Name order by milisegundos DESC
+limit 3;
+
+--la cantidad de facturas que tengan la playlist TV Shows
+select count(i.invoiceId) Cantidad,p.Name Nombre
+from invoices i
+inner join invoice_items it on it.InvoiceId = i.InvoiceId
+inner join tracks t on t.TrackId = it.TrackId
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+where p.Name = "TV Shows"
+group by p.Name;
+
+--El precio total de las pistas por genero
+select g.Name,sum(t.UnitPrice),t.Name,a.Title,ar.Name,g.Name,mt.Name
+from tracks t
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join genres g on g.GenreId = t.GenreId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+group by g.Name;
+
+--El precio total de las pistas por titulo
+select a.Title Titulo,round(sum(t.UnitPrice)) Sumatoria,t.Name Nombre,ar.Name,g.Name,mt.Name
+from tracks t
+inner join albums a on a.AlbumId = t.AlbumId
+inner join artists ar on ar.ArtistId = a.ArtistId
+inner join genres g on g.GenreId = t.GenreId
+inner join media_types mt on mt.MediaTypeId = t.MediaTypeId
+inner join playlist_track pt on pt.TrackId = t.TrackId
+inner join playlists p on p.PlaylistId = pt.PlaylistId
+group by a.Title;
